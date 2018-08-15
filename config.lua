@@ -3,4 +3,4 @@ Config = {}
 Config.Locale = 'en'
 
 Config.EnablePrice = true
-Config.Price = 250
+Config.Price = 500

@@ -10,6 +10,15 @@ local Keys = {
   ["NENTER"] = 201, ["N4"] = 108, ["N5"] = 60, ["N6"] = 107, ["N+"] = 96, ["N-"] = 97, ["N7"] = 117, ["N8"] = 61, ["N9"] = 118
 }
 
+ESX = nil
+
+Citizen.CreateThread(function()
+	while ESX == nil do
+		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
+		Citizen.Wait(0)
+	end
+end)
+
 vehicleWashStation = {
 	{26.5906,   -1392.0261, 27.3634},
 	{167.1034,  -1719.4704, 27.2916},
@@ -27,30 +36,27 @@ Citizen.CreateThread(function()
 	end
 end)
 
-function DrawSpecialText(m_text, showtime)
-	SetTextEntry_2("STRING")
-	AddTextComponentString(m_text)
-	DrawSubtitleTimed(showtime, 1)
-end
-
 Citizen.CreateThread(function ()
 	while true do
-		Citizen.Wait(0)
-		if IsPedSittingInAnyVehicle(GetPlayerPed(-1)) then 
+		Citizen.Wait(2)
+		if IsPedSittingInAnyVehicle(PlayerPedId()) then 
 			for i = 1, #vehicleWashStation do
 				garageCoords = vehicleWashStation[i]
 				DrawMarker(1, garageCoords[1], garageCoords[2], garageCoords[3], 0, 0, 0, 0, 0, 0, 5.0, 5.0, 2.0, 0, 157, 0, 155, 0, 0, 2, 0, 0, 0, 0)
-				if GetDistanceBetweenCoords(GetEntityCoords(GetPlayerPed(-1)), garageCoords[1], garageCoords[2], garageCoords[3], true) < 5 then
+				if GetDistanceBetweenCoords(GetEntityCoords(PlayerPedId()), garageCoords[1], garageCoords[2], garageCoords[3], true) < 5 then
 					if Config.EnablePrice then
-						DrawSpecialText(_U('press_wash_paid', Config.Price), 500)
+						ESX.ShowHelpNotification(_U('press_wash_paid', Config.Price))
 					else
-						DrawSpecialText(_U('press_wash'), 500)
+						ESX.ShowHelpNotification(_U('press_wash'))
 					end
 					if IsControlJustPressed(1, Keys['NENTER']) then
 						WashVehicle()
 					end
 				end
 			end
+		else
+			-- enter 'sleep mode'
+			Citizen.Wait(500)
 		end
 	end
 end)
@@ -58,17 +64,17 @@ end)
 function WashVehicle()
 	ESX.TriggerServerCallback('esx_carwash:canAfford', function(canAfford)
 		if canAfford then
-			SetVehicleDirtLevel(GetVehiclePedIsIn(GetPlayerPed(-1),  false), 0.0000000001)
-			SetVehicleUndriveable(GetVehiclePedIsUsing(GetPlayerPed(-1)), false)
+			SetVehicleDirtLevel(GetVehiclePedIsIn(PlayerPedId(),  false), 0.0000000001)
+			SetVehicleUndriveable(GetVehiclePedIsUsing(PlayerPedId()), false)
 
 			if Config.EnablePrice then
-				DrawSpecialText(_U('wash_successful_paid', Config.Price), 5000)
+				ESX.ShowNotification(_U('wash_successful_paid', Config.Price))
 			else
-				DrawSpecialText(_U('wash_successful'), 5000)
+				ESX.ShowNotification(_U('wash_successful'))
 			end
 			Citizen.Wait(5000)
 		else
-			DrawSpecialText(_U('wash_failed'), 5000)
+			ESX.ShowNotification(_U('wash_failed'))
 			Citizen.Wait(5000)
 		end
 	end)
